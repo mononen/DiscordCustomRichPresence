@@ -22,6 +22,12 @@ char discordLargeImageKey[64];
 char discordSmallImageKey[64];
 char discordSmallImageText[512];
 char discordLargeImageText[256];
+char discordStateRaw[256];
+char discordDetailsRaw[256];
+char discordLargeImageKeyRaw[64];
+char discordSmallImageKeyRaw[64];
+char discordSmallImageTextRaw[512];
+char discordLargeImageTextRaw[256];
 int timer;
 FILE *config;
 
@@ -282,6 +288,11 @@ int readConfig()
 		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
 	}
 	return 0;
+}
+
+void parseConfigInput()
+{
+	for(int i = 0; i < strlen(discordLargeImageKeyRaw); i++)
 }
 
 int writeConfig()

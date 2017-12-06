@@ -13,7 +13,7 @@ This is a simple example in C of using the rich presence API asyncronously.
 
 #include "discord-rpc.h"
 
-static const char* APPLICATION_ID = "387412856724783117";
+char APPLICATION_ID[26];
 static int FrustrationLevel = 0;
 static int64_t StartTime;
 char discordState[256];
@@ -164,7 +164,8 @@ static void gameLoop()
 	StartTime = time(0) - 10000000;
 
 	printf("Welcome to the Discord Rich Presence-o-bot!\n");
-	printf("q = quit, y = reinit");
+	printf("q = quit, y = reinit\n");
+	printf("please press 'a' for the program to hook to discord!\n");
 	while (prompt(line, sizeof(line))) {
 		if (line[0]) {
 			if (line[0] == 'q') {
@@ -254,31 +255,39 @@ int readConfig()
 	{
 		if (i == 0)
 		{
-			strcpy(discordLargeImageKey, buf);
+			strcpy(APPLICATION_ID, buf);
 		}
 		if (i == 1)
 		{
-			strcpy(discordSmallImageKey, buf);
+			strcpy(discordLargeImageKey, buf);
 		}
 		if (i == 2)
 		{
-			strcpy(discordLargeImageText, buf);
+			strcpy(discordSmallImageKey, buf);
 		}
 		if (i == 3)
 		{
-			strcpy(discordSmallImageText, buf);
+			strcpy(discordLargeImageText, buf);
 		}
 		if (i == 4)
 		{
-			strcpy(discordDetails, buf);
+			strcpy(discordSmallImageText, buf);
 		}
 		if (i == 5)
+		{
+			strcpy(discordDetails, buf);
+		}
+		if (i == 6)
 		{
 			strcpy(discordState, buf);
 		}
 		i++;
 	}
 	fclose(config);
+	if (APPLICATION_ID[strlen(APPLICATION_ID) - 1] == '\n')
+	{
+		APPLICATION_ID[strlen(APPLICATION_ID) - 1] = '\0';
+	}
 	if (discordLargeImageKey[strlen(discordLargeImageKey) - 1] == '\n')
 	{
 		discordLargeImageKey[strlen(discordLargeImageKey) - 1] = '\0';
@@ -292,7 +301,11 @@ int readConfig()
 
 void parseConfigInput()
 {
-	for(int i = 0; i < strlen(discordLargeImageKeyRaw); i++)
+	int j = 0;
+	for (int i = 0; i < strlen(discordLargeImageKeyRaw); i++)
+	{
+		//scan through char array, copy letters after "
+	}
 }
 
 int writeConfig()

@@ -7,6 +7,7 @@ This is a simple example in C of using the rich presence API asyncronously.
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
@@ -15,12 +16,12 @@ This is a simple example in C of using the rich presence API asyncronously.
 static const char* APPLICATION_ID = "387412856724783117";
 static int FrustrationLevel = 0;
 static int64_t StartTime;
-char discordState[256] = "Probably doing things?";
-char discordDetails[256] = "Staying Frosty";
-char discordLargeImageKey[64] = "stay_frosty";
-char discordSmallImageKey[64] = "hypesquadbadge";
-char discordSmallImageText[512] = "part of the HypeSquad";
-char discordLargeImageText[256] = "Is he actually doing anything tho?";
+char discordState[256];
+char discordDetails[256];
+char discordLargeImageKey[64];
+char discordSmallImageKey[64];
+char discordSmallImageText[512];
+char discordLargeImageText[256];
 int timer;
 FILE *config;
 
@@ -156,7 +157,7 @@ static void gameLoop()
 	//sets it to like 17 hours
 	StartTime = time(0) - 10000000;
 
-	printf("You are standing in an open field west of a white house.\n");
+	printf("Welcome to the Discord Rich Presence-o-bot!\n");
 	printf("q = quit, y = reinit");
 	while (prompt(line, sizeof(line))) {
 		if (line[0]) {
@@ -180,60 +181,18 @@ static void gameLoop()
 				strcpy(discordSmallImageKey, "hypesquadbadge");
 				discordInit();
 			}
-			if (line[0] == 'c')
-			{
-				printf("change what? \n");
-				char command[512];
-				scanf_s("%s", &command);
-				if (strcmp(command, "largekey") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordLargeImageKey, specific);
-				}
-				if (strcmp(command, "largetext") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordLargeImageText, specific);
-				}
-				if (strcmp(command, "smallkey") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordSmallImageKey, specific);
-				}
-				if (strcmp(command, "smalltext") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordSmallImageText, specific);
-				}
-				if (strcmp(command, "details") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordDetails, specific);
-				}
-				if (strcmp(command, "state") == 0)
-				{
-					char specific[64];
-					scanf_s("%s", &specific);
-					strcpy(discordState, specific);
-				}
-				printf("Reinit Discord. \n");
-				discordInit();
-				continue;
-			}
-
 			if (line[0] == 'r')
 			{
 				reboot();
 			}
+			if (line[0] == 'p')
+			{
+				int lengthtest = strlen(discordLargeImageKey);
+				printf("%s%s%s%s%s%s", discordLargeImageKey, discordSmallImageKey, discordLargeImageText, discordSmallImageText, discordDetails, discordState);
+			}
 			if (time(NULL) & 1) {
 				printf("I don't understand that.\n");
 			}
-
 			else {
 				space = strchr(line, ' ');
 				if (space) {
@@ -274,60 +233,10 @@ int countlines(char *filename)
 
 int reboot()
 {
-	writeConfig();
-	readConfig();
 	system("send-presence.exe");
-	exit();
+	abort;
 	return 0;
 }
-
-/*
-void copyConfig()
-{
-config = fopen("config.txt", "r");
-
-if (config != NULL)
-{
-char line[2048];
-int i = 0;
-
-while ((fgets(line, sizeof(line), config) != NULL) && i < 7)
-{
-char *cfline;
-cfline = strstr((char *)line, DELIM);
-cfline = cfline + strlen(DELIM);
-
-if (i == 0) {
-memcpy(discordLargeImageKey, cfline, strlen(cfline));
-//printf("%s",configstruct.imgserver);
-}
-else if (i == 1) {
-memcpy(discordSmallImageKey, cfline, strlen(cfline));
-//printf("%s",configstruct.ccserver);
-}
-else if (i == 2) {
-memcpy(discordLargeImageText, cfline, strlen(cfline));
-//printf("%s",configstruct.port);
-}
-else if (i == 3) {
-memcpy(discordSmallImageText, cfline, strlen(cfline));
-//printf("%s",configstruct.imagename);
-}
-else if (i == 4) {
-memcpy(discordDetails, cfline, strlen(cfline));
-//printf("%s",configstruct.getcmd);
-}
-else if (i == 5)
-{
-memcpy(discordState, cfline, strlen(cfline));
-}
-
-i++;
-} // End while
-fclose(config);
-} // End if
-}
-*/
 
 int readConfig()
 {
@@ -361,8 +270,17 @@ int readConfig()
 		{
 			strcpy(discordState, buf);
 		}
+		i++;
 	}
 	fclose(config);
+	if (discordLargeImageKey[strlen(discordLargeImageKey) - 1] == '\n')
+	{
+		discordLargeImageKey[strlen(discordLargeImageKey) - 1] = '\0';
+	}
+	if (discordSmallImageKey[strlen(discordSmallImageKey) - 1] == '\n')
+	{
+		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
+	}
 	return 0;
 }
 
@@ -370,12 +288,12 @@ int writeConfig()
 {
 	clearConfig();
 	config = fopen("config.txt", "a");
-	fprintf(config, "%s", discordLargeImageKey);
-	fprintf(config, "%s", discordSmallImageKey);
-	fprintf(config, "%s", discordLargeImageText);
-	fprintf(config, "%s", discordSmallImageText);
-	fprintf(config, "%s", discordDetails);
-	fprintf(config, "%s", discordState);
+	fprintf(config, "%s\n", discordLargeImageKey);
+	fprintf(config, "%s\n", discordSmallImageKey);
+	fprintf(config, "%s\n", discordLargeImageText);
+	fprintf(config, "%s\n", discordSmallImageText);
+	fprintf(config, "%s\n", discordDetails);
+	fprintf(config, "%s\n", discordState);
 	fclose(config);
 	return 0;
 }
@@ -389,8 +307,6 @@ int clearConfig()
 
 int main(int argc, char* argv[])
 {
-	//config = fopen("config.txt", "r+");
-	//for each line in the document, take the header and set it equal to the preceeding text
 	readConfig();
 
 	discordInit();

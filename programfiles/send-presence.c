@@ -22,6 +22,7 @@ char discordLargeImageKey[64];
 char discordSmallImageKey[64];
 char discordSmallImageText[512];
 char discordLargeImageText[256];
+char APPLICATION_IDRAW[70];
 char discordStateRaw[256];
 char discordDetailsRaw[256];
 char discordLargeImageKeyRaw[64];
@@ -255,7 +256,7 @@ int readConfig()
 	{
 		if (i == 0)
 		{
-			strcpy(APPLICATION_ID, buf);
+			strcpy(APPLICATION_IDRAW, buf);
 		}
 		if (i == 1)
 		{
@@ -284,6 +285,8 @@ int readConfig()
 		i++;
 	}
 	fclose(config);
+
+	//deletes the \n after each line of input
 	if (APPLICATION_ID[strlen(APPLICATION_ID) - 1] == '\n')
 	{
 		APPLICATION_ID[strlen(APPLICATION_ID) - 1] = '\0';
@@ -296,16 +299,44 @@ int readConfig()
 	{
 		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
 	}
+	char copy[1000];
+	
+	strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
+
 	return 0;
 }
 
-void parseConfigInput()
+char * fixConfigInput(char * input)
 {
-	int j = 0;
-	for (int i = 0; i < strlen(discordLargeImageKeyRaw); i++)
+	char buf[1000];
+	int start;
+	int end;
+	int count = 0;
+	for (int i = 0; i < strlen(input); i++)
 	{
-		//scan through char array, copy letters after "
+		if (input[i] == '\"')
+		{
+			if (count == 0)
+			{
+				start = i;
+			}
+			if (count == 1)
+			{
+				end = i;
+			}
+			count++;
+		}//end if
+	}//end for
+	//now I have the start and end points of the string
+	int j = 0;
+	for (int i = start + 1; i <= end - 1; i++)
+	{
+		buf[j] = input[i];
+		j++;
 	}
+	char * output;
+	strcpy(output, buf);
+	return output;
 }
 
 int writeConfig()
@@ -332,6 +363,8 @@ int clearConfig()
 int main(int argc, char* argv[])
 {
 	readConfig();
+
+	//parseConfigInput();
 
 	discordInit();
 

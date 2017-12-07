@@ -1,7 +1,7 @@
-INSERT CLIENT ID HERE!
-hypesquadlogo-black
-hypesquadbadge
-wooooooooo
-nyooom
-doing things?
-maybe?
+DISCORD APP CLIENT ID: ""
+LARGE IMAGE KEY: ""
+SMALL IMAGE KEY: ""
+LARGE IMAGE HOVER TEXT: ""
+SMALL IMAGE HOVER TEXT: ""
+DETAILS: ""
+STATE/STATUS: ""

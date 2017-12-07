@@ -13,6 +13,8 @@ This is a simple example in C of using the rich presence API asyncronously.
 
 #include "discord-rpc.h"
 
+int fixConfigInput(char * input, char * output);
+
 char APPLICATION_ID[26];
 static int FrustrationLevel = 0;
 static int64_t StartTime;
@@ -22,6 +24,8 @@ char discordLargeImageKey[64];
 char discordSmallImageKey[64];
 char discordSmallImageText[512];
 char discordLargeImageText[256];
+int64_t customStartTime = 0;
+char discordCustomStartTimeRaw[265];
 char APPLICATION_IDRAW[70];
 char discordStateRaw[256];
 char discordDetailsRaw[256];
@@ -162,7 +166,7 @@ static void gameLoop()
 	char* space;
 
 	//sets it to like 17 hours
-	StartTime = time(0) - 10000000;
+	StartTime = time(0) - customStartTime;
 
 	printf("Welcome to the Discord Rich Presence-o-bot!\n");
 	printf("q = quit, y = reinit\n");
@@ -184,10 +188,15 @@ static void gameLoop()
 				discordInit();
 				continue;
 			}
+			if (line[0] == 'a')
+			{
+				printf("Attempting to bind to Discord!");
+			}
 			if (line[0] == 'p')
 			{
 				strcpy(discordSmallImageKey, "hypesquadbadge");
 				discordInit();
+				continue;
 			}
 			if (line[0] == 'r')
 			{
@@ -198,12 +207,18 @@ static void gameLoop()
 				int lengthtest = strlen(discordLargeImageKey);
 				printf("%s%s%s%s%s%s", discordLargeImageKey, discordSmallImageKey, discordLargeImageText, discordSmallImageText, discordDetails, discordState);
 			}
-			if (time(NULL) & 1) {
-				printf("I don't understand that.\n");
+			if (time(NULL) & 1) 
+			{
+				if (line[0] != 'a')
+				{
+					printf("I don't understand that.\n");
+				}
 			}
-			else {
+			else 
+			{
 				space = strchr(line, ' ');
-				if (space) {
+				if (space) 
+				{
 					*space = 0;
 				}
 				printf("I don't know the word \"%s\".\n", line);
@@ -260,27 +275,27 @@ int readConfig()
 		}
 		if (i == 1)
 		{
-			strcpy(discordLargeImageKey, buf);
+			strcpy(discordLargeImageKeyRaw, buf);
 		}
 		if (i == 2)
 		{
-			strcpy(discordSmallImageKey, buf);
+			strcpy(discordSmallImageKeyRaw, buf);
 		}
 		if (i == 3)
 		{
-			strcpy(discordLargeImageText, buf);
+			strcpy(discordLargeImageTextRaw, buf);
 		}
 		if (i == 4)
 		{
-			strcpy(discordSmallImageText, buf);
+			strcpy(discordSmallImageTextRaw, buf);
 		}
 		if (i == 5)
 		{
-			strcpy(discordDetails, buf);
+			strcpy(discordDetailsRaw, buf);
 		}
 		if (i == 6)
 		{
-			strcpy(discordState, buf);
+			strcpy(discordStateRaw, buf);
 		}
 		i++;
 	}
@@ -299,16 +314,23 @@ int readConfig()
 	{
 		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
 	}
-	char copy[1000];
-	
-	strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
+
+	fixConfigInput(APPLICATION_IDRAW, APPLICATION_ID);
+	fixConfigInput(discordLargeImageKeyRaw, discordLargeImageKey);
+	fixConfigInput(discordSmallImageKeyRaw, discordSmallImageKey);
+	fixConfigInput(discordLargeImageTextRaw, discordLargeImageText);
+	fixConfigInput(discordSmallImageTextRaw, discordSmallImageText);
+	fixConfigInput(discordDetailsRaw, discordDetails);
+	fixConfigInput(discordStateRaw, discordState);
+
+	//alternate way of doing it strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
 
 	return 0;
 }
 
-char * fixConfigInput(char * input)
+//alternate way of doing it char * fixConfigInput(char * input)
+int fixConfigInput(char * input, char * output)
 {
-	char buf[1000];
 	int start;
 	int end;
 	int count = 0;
@@ -327,16 +349,21 @@ char * fixConfigInput(char * input)
 			count++;
 		}//end if
 	}//end for
+	if (count < 1)
+	{
+		strcpy(output, input);
+		return 0;
+	}
 	//now I have the start and end points of the string
 	int j = 0;
-	for (int i = start + 1; i <= end - 1; i++)
+	for (int n = start + 1; n <= end - 1; n++)
 	{
-		buf[j] = input[i];
+		output[j] = input[n];
 		j++;
 	}
-	char * output;
-	strcpy(output, buf);
-	return output;
+	int last = end - start;
+	output[last - 1] = '\0';
+	return 1;
 }
 
 int writeConfig()

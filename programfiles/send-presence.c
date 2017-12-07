@@ -13,7 +13,9 @@ This is a simple example in C of using the rich presence API asyncronously.
 
 #include "discord-rpc.h"
 
-static const char* APPLICATION_ID = "387412856724783117";
+int fixConfigInput(char * input, char * output);
+
+char APPLICATION_ID[26];
 static int FrustrationLevel = 0;
 static int64_t StartTime;
 char discordState[256];
@@ -22,6 +24,15 @@ char discordLargeImageKey[64];
 char discordSmallImageKey[64];
 char discordSmallImageText[512];
 char discordLargeImageText[256];
+int64_t customStartTime = 0;
+char discordCustomStartTimeRaw[265];
+char APPLICATION_IDRAW[70];
+char discordStateRaw[256];
+char discordDetailsRaw[256];
+char discordLargeImageKeyRaw[64];
+char discordSmallImageKeyRaw[64];
+char discordSmallImageTextRaw[512];
+char discordLargeImageTextRaw[256];
 int timer;
 FILE *config;
 
@@ -155,10 +166,11 @@ static void gameLoop()
 	char* space;
 
 	//sets it to like 17 hours
-	StartTime = time(0) - 10000000;
+	StartTime = time(0) - customStartTime;
 
 	printf("Welcome to the Discord Rich Presence-o-bot!\n");
-	printf("q = quit, y = reinit");
+	printf("q = quit, y = reinit\n");
+	printf("please press 'a' for the program to hook to discord!\n");
 	while (prompt(line, sizeof(line))) {
 		if (line[0]) {
 			if (line[0] == 'q') {
@@ -176,10 +188,15 @@ static void gameLoop()
 				discordInit();
 				continue;
 			}
+			if (line[0] == 'a')
+			{
+				printf("Attempting to bind to Discord!");
+			}
 			if (line[0] == 'p')
 			{
 				strcpy(discordSmallImageKey, "hypesquadbadge");
 				discordInit();
+				continue;
 			}
 			if (line[0] == 'r')
 			{
@@ -190,12 +207,18 @@ static void gameLoop()
 				int lengthtest = strlen(discordLargeImageKey);
 				printf("%s%s%s%s%s%s", discordLargeImageKey, discordSmallImageKey, discordLargeImageText, discordSmallImageText, discordDetails, discordState);
 			}
-			if (time(NULL) & 1) {
-				printf("I don't understand that.\n");
+			if (time(NULL) & 1) 
+			{
+				if (line[0] != 'a')
+				{
+					printf("I don't understand that.\n");
+				}
 			}
-			else {
+			else 
+			{
 				space = strchr(line, ' ');
-				if (space) {
+				if (space) 
+				{
 					*space = 0;
 				}
 				printf("I don't know the word \"%s\".\n", line);
@@ -248,31 +271,41 @@ int readConfig()
 	{
 		if (i == 0)
 		{
-			strcpy(discordLargeImageKey, buf);
+			strcpy(APPLICATION_IDRAW, buf);
 		}
 		if (i == 1)
 		{
-			strcpy(discordSmallImageKey, buf);
+			strcpy(discordLargeImageKeyRaw, buf);
 		}
 		if (i == 2)
 		{
-			strcpy(discordLargeImageText, buf);
+			strcpy(discordSmallImageKeyRaw, buf);
 		}
 		if (i == 3)
 		{
-			strcpy(discordSmallImageText, buf);
+			strcpy(discordLargeImageTextRaw, buf);
 		}
 		if (i == 4)
 		{
-			strcpy(discordDetails, buf);
+			strcpy(discordSmallImageTextRaw, buf);
 		}
 		if (i == 5)
 		{
-			strcpy(discordState, buf);
+			strcpy(discordDetailsRaw, buf);
+		}
+		if (i == 6)
+		{
+			strcpy(discordStateRaw, buf);
 		}
 		i++;
 	}
 	fclose(config);
+
+	//deletes the \n after each line of input
+	if (APPLICATION_ID[strlen(APPLICATION_ID) - 1] == '\n')
+	{
+		APPLICATION_ID[strlen(APPLICATION_ID) - 1] = '\0';
+	}
 	if (discordLargeImageKey[strlen(discordLargeImageKey) - 1] == '\n')
 	{
 		discordLargeImageKey[strlen(discordLargeImageKey) - 1] = '\0';
@@ -281,7 +314,56 @@ int readConfig()
 	{
 		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
 	}
+
+	fixConfigInput(APPLICATION_IDRAW, APPLICATION_ID);
+	fixConfigInput(discordLargeImageKeyRaw, discordLargeImageKey);
+	fixConfigInput(discordSmallImageKeyRaw, discordSmallImageKey);
+	fixConfigInput(discordLargeImageTextRaw, discordLargeImageText);
+	fixConfigInput(discordSmallImageTextRaw, discordSmallImageText);
+	fixConfigInput(discordDetailsRaw, discordDetails);
+	fixConfigInput(discordStateRaw, discordState);
+
+	//alternate way of doing it strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
+
 	return 0;
+}
+
+//alternate way of doing it char * fixConfigInput(char * input)
+int fixConfigInput(char * input, char * output)
+{
+	int start;
+	int end;
+	int count = 0;
+	for (int i = 0; i < strlen(input); i++)
+	{
+		if (input[i] == '\"')
+		{
+			if (count == 0)
+			{
+				start = i;
+			}
+			if (count == 1)
+			{
+				end = i;
+			}
+			count++;
+		}//end if
+	}//end for
+	if (count < 1)
+	{
+		strcpy(output, input);
+		return 0;
+	}
+	//now I have the start and end points of the string
+	int j = 0;
+	for (int n = start + 1; n <= end - 1; n++)
+	{
+		output[j] = input[n];
+		j++;
+	}
+	int last = end - start;
+	output[last - 1] = '\0';
+	return 1;
 }
 
 int writeConfig()
@@ -308,6 +390,8 @@ int clearConfig()
 int main(int argc, char* argv[])
 {
 	readConfig();
+
+	//parseConfigInput();
 
 	discordInit();
 

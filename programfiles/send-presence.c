@@ -18,6 +18,7 @@ int fixConfigInput(char * input, char * output);
 char APPLICATION_ID[26];
 static int FrustrationLevel = 0;
 static int64_t StartTime;
+char discordCustomStartTime[64];
 char discordState[256];
 char discordDetails[256];
 char discordLargeImageKey[64];
@@ -33,7 +34,7 @@ char discordLargeImageKeyRaw[64];
 char discordSmallImageKeyRaw[64];
 char discordSmallImageTextRaw[512];
 char discordLargeImageTextRaw[256];
-int timer;
+//int timer;
 FILE *config;
 
 static int prompt(char* line, size_t size)
@@ -83,6 +84,10 @@ static void updateDiscordPresence()
 	if (discordSmallImageKey != NULL)
 	{
 		discordPresence.smallImageKey = discordSmallImageKey;
+	}
+	if (discordDetails != NULL)
+	{
+		discordPresence.details = discordDetails;
 	}
 	discordPresence.matchSecret = "xyzzy";
 	discordPresence.instance = 0;
@@ -188,15 +193,15 @@ static void gameLoop()
 				discordInit();
 				continue;
 			}
+			if (line[0] == 'g')
+			{
+				printf("RUNNING CONFIG GENERATOR");
+				configGen(1);
+				continue;
+			}
 			if (line[0] == 'a')
 			{
 				printf("Attempting to bind to Discord!");
-			}
-			if (line[0] == 'p')
-			{
-				strcpy(discordSmallImageKey, "hypesquadbadge");
-				discordInit();
-				continue;
 			}
 			if (line[0] == 'r')
 			{
@@ -297,6 +302,10 @@ int readConfig()
 		{
 			strcpy(discordStateRaw, buf);
 		}
+		if (i == 7)
+		{
+			strcpy(discordCustomStartTimeRaw, buf);
+		}
 		i++;
 	}
 	fclose(config);
@@ -322,6 +331,7 @@ int readConfig()
 	fixConfigInput(discordSmallImageTextRaw, discordSmallImageText);
 	fixConfigInput(discordDetailsRaw, discordDetails);
 	fixConfigInput(discordStateRaw, discordState);
+	fixConfigInput(discordCustomStartTimeRaw, discordCustomStartTime);
 
 	//alternate way of doing it strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
 
@@ -387,8 +397,62 @@ int clearConfig()
 	return 0;
 }
 
+int checkConfig()
+{
+	FILE * config;
+	//config = fopen("config.txt", "w");
+	//fclose(config);
+	config = fopen("config.txt", "r");
+	char buf[1000];
+	int i = 0;
+	if (!config) { return 1; }
+	while (fgets(buf, 1000, config) != NULL)
+	{
+		if (strstr(buf, "DISCORD APP CLIENT ID"));
+		{
+			fclose(config);
+			return 1;
+		}
+	}
+	return 0;
+}
+
+int configGen(int bypasss)
+{
+	if (bypasss == 1)
+	{
+		FILE * config;
+		//add generation of config file
+		//fclose(config);
+		config = fopen("config.txt", "w");
+		fprintf(config, "DISCORD APP CLIENT ID: \"\"\n");
+		fprintf(config, "LARGE IMAGE KEY: \"\"\n");
+		fprintf(config, "SMALL IMAGE KEY: \"\"\n");
+		fprintf(config, "LARGE IMAGE HOVER TEXT: \"\"\n");
+		fprintf(config, "SMALL IMAGE HOVER TEXT: \"\"\n");
+		fprintf(config, "DETAILS: \"\"\n");
+		fprintf(config, "STATUS: \"\"\n");
+	}
+	if (checkConfig() == 0 && bypasss == 0)
+	{
+		FILE * config;
+		//add generation of config file
+		//fclose(config);
+		config = fopen("config.txt", "w");
+		fprintf(config, "DISCORD APP CLIENT ID: \"\"\n");
+		fprintf(config, "LARGE IMAGE KEY: \"\"\n");
+		fprintf(config, "SMALL IMAGE KEY: \"\"\n");
+		fprintf(config, "LARGE IMAGE HOVER TEXT: \"\"\n");
+		fprintf(config, "SMALL IMAGE HOVER TEXT: \"\"\n");
+		fprintf(config, "DETAILS: \"\"\n");
+		fprintf(config, "STATUS: \"\"\n");
+	}
+}
+
 int main(int argc, char* argv[])
 {
+	configGen(0);
+
 	readConfig();
 
 	//parseConfigInput();

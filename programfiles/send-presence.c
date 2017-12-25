@@ -18,6 +18,7 @@ int fixConfigInput(char * input, char * output);
 char APPLICATION_ID[26];
 static int FrustrationLevel = 0;
 static int64_t StartTime;
+char discordConserveStartTime[64];
 char discordCustomStartTime[64];
 char discordState[256];
 char discordDetails[256];
@@ -26,6 +27,7 @@ char discordSmallImageKey[64];
 char discordSmallImageText[512];
 char discordLargeImageText[256];
 int64_t customStartTime = 0;
+char discordConserveStartTimeRaw[256];
 char discordCustomStartTimeRaw[265];
 char APPLICATION_IDRAW[70];
 char discordStateRaw[256];
@@ -51,7 +53,6 @@ static int prompt(char* line, size_t size)
 	}
 	return res;
 }
-
 static void updateDiscordPresence()
 {
 	//some of the old code
@@ -93,32 +94,26 @@ static void updateDiscordPresence()
 	discordPresence.instance = 0;
 	Discord_UpdatePresence(&discordPresence);
 }
-
 static void handleDiscordReady()
 {
 	printf("\nDiscord: ready\n");
 }
-
 static void handleDiscordDisconnected(int errcode, const char* message)
 {
 	printf("\nDiscord: disconnected (%d: %s)\n", errcode, message);
 }
-
 static void handleDiscordError(int errcode, const char* message)
 {
 	printf("\nDiscord: error (%d: %s)\n", errcode, message);
 }
-
 static void handleDiscordJoin(const char* secret)
 {
 	printf("\nDiscord: join (%s)\n", secret);
 }
-
 static void handleDiscordSpectate(const char* secret)
 {
 	printf("\nDiscord: spectate (%s)\n", secret);
 }
-
 static void handleDiscordJoinRequest(const DiscordJoinRequest* request)
 {
 	int response = -1;
@@ -151,7 +146,6 @@ static void handleDiscordJoinRequest(const DiscordJoinRequest* request)
 		Discord_Respond(request->userId, response);
 	}
 }
-
 static void discordInit()
 {
 	DiscordEventHandlers handlers;
@@ -164,7 +158,6 @@ static void discordInit()
 	handlers.joinRequest = handleDiscordJoinRequest;
 	Discord_Initialize(APPLICATION_ID, &handlers, 1, NULL);
 }
-
 static void gameLoop()
 {
 	char line[512];
@@ -240,7 +233,6 @@ static void gameLoop()
 		Discord_RunCallbacks();
 	}
 }
-
 int countlines(char *filename)
 {
 	FILE *fp = fopen(filename, "r");
@@ -258,14 +250,12 @@ int countlines(char *filename)
 
 	return lines;
 }
-
 int reboot()
 {
 	system("send-presence.exe");
 	abort;
 	return 0;
 }
-
 int readConfig()
 {
 	config = fopen("config.txt", "r");
@@ -304,6 +294,10 @@ int readConfig()
 		}
 		if (i == 7)
 		{
+			strcpy(discordConserveStartTimeRaw, buf);
+		}
+		if (i == 8)
+		{
 			strcpy(discordCustomStartTimeRaw, buf);
 		}
 		i++;
@@ -323,6 +317,10 @@ int readConfig()
 	{
 		discordSmallImageKey[strlen(discordSmallImageKey) - 1] = '\0';
 	}
+	if (discordCustomStartTime[strlen(discordCustomStartTime) - 1] == '\n')
+	{
+		discordCustomStartTime[strlen(discordCustomStartTime) - 1] = '\0';
+	}
 
 	fixConfigInput(APPLICATION_IDRAW, APPLICATION_ID);
 	fixConfigInput(discordLargeImageKeyRaw, discordLargeImageKey);
@@ -332,13 +330,15 @@ int readConfig()
 	fixConfigInput(discordDetailsRaw, discordDetails);
 	fixConfigInput(discordStateRaw, discordState);
 	fixConfigInput(discordCustomStartTimeRaw, discordCustomStartTime);
-
-	//alternate way of doing it strcpy(APPLICATION_ID, fixConfigInput(APPLICATION_IDRAW));
+	fixConfigInput(discordConserveStartTimeRaw, discordConserveStartTime);
+	fixConfigInput(discordCustomStartTimeRaw, discordCustomStartTime);
 
 	return 0;
 }
-
-//alternate way of doing it char * fixConfigInput(char * input)
+int countTime(int result)
+{
+	result = time(0) - StartTime;
+}
 int fixConfigInput(char * input, char * output)
 {
 	int start;
@@ -375,7 +375,6 @@ int fixConfigInput(char * input, char * output)
 	output[last - 1] = '\0';
 	return 1;
 }
-
 int writeConfig()
 {
 	clearConfig();
@@ -386,17 +385,26 @@ int writeConfig()
 	fprintf(config, "%s\n", discordSmallImageText);
 	fprintf(config, "%s\n", discordDetails);
 	fprintf(config, "%s\n", discordState);
+	fprintf(config, "%s\n", discordConserveStartTime);
+	if (strstr(discordConserveStartTime, "y"))
+	{
+		int tmp = 0;
+		countTime(tmp);
+		fprintf(config, "%s\n", tmp);
+	}
+	else
+	{
+		fprintf(config, "%s\n", "0");
+	}
 	fclose(config);
 	return 0;
 }
-
 int clearConfig()
 {
 	config = fopen("config.tex", "w");
 	fclose(config);
 	return 0;
 }
-
 int checkConfig()
 {
 	FILE * config;
@@ -416,10 +424,9 @@ int checkConfig()
 	}
 	return 0;
 }
-
 int configGen(int bypasss)
 {
-	if (bypasss == 1)
+	if (bypasss == 1 || (checkConfig() == 0 && bypasss == 0))
 	{
 		FILE * config;
 		//add generation of config file
@@ -432,6 +439,8 @@ int configGen(int bypasss)
 		fprintf(config, "SMALL IMAGE HOVER TEXT: \"\"\n");
 		fprintf(config, "DETAILS: \"\"\n");
 		fprintf(config, "STATUS: \"\"\n");
+		fprintf(config, "CONSERVE START TIME? (Y/N): \"\"\n");
+		fprintf(config, "IF YOU DON'T WANT A CUSTOM START TIME, ENTER 0 OR LEAVE BLANK: \"\"\n");	
 	}
 	if (checkConfig() == 0 && bypasss == 0)
 	{
@@ -448,7 +457,6 @@ int configGen(int bypasss)
 		fprintf(config, "STATUS: \"\"\n");
 	}
 }
-
 int main(int argc, char* argv[])
 {
 	configGen(0);
@@ -457,9 +465,9 @@ int main(int argc, char* argv[])
 
 	//parseConfigInput();
 
-	discordInit();
-
 	gameLoop();
+
+	discordInit();
 
 	Discord_Shutdown();
 	return 0;
